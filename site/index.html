@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSW Weather Forecast Data</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            line-height: 1.6;
+        }
+        h1 { color: #333; }
+        a { color: #0066cc; }
+        .updated { color: #666; font-size: 0.9rem; }
+        pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>NSW Weather Forecast Data</h1>
+    <p>Daily temperature forecasts for NSW locations from the Australian Bureau of Meteorology.</p>
+
+    <h2>Download</h2>
+    <p><a href="forecast.csv">forecast.csv</a> - Nearest min/max temperatures for all NSW locations</p>
+
+    <h2>Data Format</h2>
+    <pre>aac,location,min_temp_celsius,min_temp_date,max_temp_celsius,max_temp_date
+NSW_PT131,Sydney,21,2026-01-09,33,2026-01-08
+...</pre>
+
+    <h2>Fields</h2>
+    <ul>
+        <li><strong>aac</strong> - BOM area code</li>
+        <li><strong>location</strong> - Location name</li>
+        <li><strong>min_temp_celsius</strong> - Nearest forecast minimum temperature</li>
+        <li><strong>min_temp_date</strong> - Date the min temp applies to</li>
+        <li><strong>max_temp_celsius</strong> - Nearest forecast maximum temperature</li>
+        <li><strong>max_temp_date</strong> - Date the max temp applies to</li>
+    </ul>
+
+    <h2>Source</h2>
+    <p>Data sourced from <a href="http://www.bom.gov.au/">Bureau of Meteorology</a> (IDN11060).</p>
+    <p>Updated daily via GitHub Actions.</p>
+
+    <p class="updated">Last updated: <span id="updated">Check CSV for latest data</span></p>
+</body>
+</html>

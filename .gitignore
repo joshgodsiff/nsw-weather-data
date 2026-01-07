@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# UV
+uv.lock
+
+# Output (generated at runtime)
+site/forecast.csv
+output/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+
+# IDE
+.idea/
+.vscode/
+*.swp

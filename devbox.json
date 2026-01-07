@@ -1,13 +1,16 @@
 {
   "$schema":  "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
-  "packages": ["claude-code@latest"],
+  "packages": ["claude-code@latest", "uv@latest", "curl@latest"],
   "shell": {
     "init_hook": [
       "echo 'Welcome to devbox!' > /dev/null"
     ],
     "scripts": {
       "test": [
-        "echo \"Error: no test specified\" && exit 1"
+        "uv run --extra dev pytest -v"
+      ],
+      "fetch": [
+        "uv run python src/fetch_bom.py"
       ]
     }
   }
