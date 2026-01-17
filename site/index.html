@@ -20,33 +20,50 @@
             padding: 1rem;
             overflow-x: auto;
             border-radius: 4px;
+            font-size: 0.85rem;
         }
     </style>
 </head>
 <body>
     <h1>NSW Weather Forecast Data</h1>
-    <p>Daily temperature forecasts for NSW locations from the Australian Bureau of Meteorology.</p>
+    <p>Weather forecasts for selected NSW locations from the Australian Bureau of Meteorology.</p>
 
     <h2>Download</h2>
-    <p><a href="forecast.csv">forecast.csv</a> - Nearest min/max temperatures for all NSW locations</p>
+    <p><a href="forecast.csv">forecast.csv</a> - Today's weather + 7-day forecast</p>
 
     <h2>Data Format</h2>
-    <pre>aac,location,min_temp_celsius,min_temp_date,max_temp_celsius,max_temp_date
-NSW_PT131,Sydney,21,2026-01-09,33,2026-01-08
-...</pre>
+    <pre>location,state,postcode,geohash,today_min_c,today_max_c,fire_danger,rain_min_mm,rain_max_mm,rain_chance_pct,day0_date,day0_min_c,day0_max_c,...
+Lithgow,NSW,2790,r64c839,12,18,Moderate,10,30,90,2026-01-16,,18,...</pre>
 
     <h2>Fields</h2>
+    <h3>Location Info</h3>
     <ul>
-        <li><strong>aac</strong> - BOM area code</li>
         <li><strong>location</strong> - Location name</li>
-        <li><strong>min_temp_celsius</strong> - Nearest forecast minimum temperature</li>
-        <li><strong>min_temp_date</strong> - Date the min temp applies to</li>
-        <li><strong>max_temp_celsius</strong> - Nearest forecast maximum temperature</li>
-        <li><strong>max_temp_date</strong> - Date the max temp applies to</li>
+        <li><strong>state</strong> - State code</li>
+        <li><strong>postcode</strong> - Postal code</li>
+        <li><strong>geohash</strong> - BOM geohash identifier</li>
+    </ul>
+
+    <h3>Today's Weather</h3>
+    <ul>
+        <li><strong>today_min_c</strong> - Today's minimum temperature (Celsius)</li>
+        <li><strong>today_max_c</strong> - Today's maximum temperature (Celsius)</li>
+        <li><strong>fire_danger</strong> - Fire danger rating (e.g., "Moderate", "High", "Extreme")</li>
+        <li><strong>rain_min_mm</strong> - Minimum expected rainfall (mm)</li>
+        <li><strong>rain_max_mm</strong> - Maximum expected rainfall (mm)</li>
+        <li><strong>rain_chance_pct</strong> - Chance of rain (%)</li>
+    </ul>
+
+    <h3>7-Day Forecast</h3>
+    <p>For each day (0-6), where day 0 is today:</p>
+    <ul>
+        <li><strong>dayN_date</strong> - Forecast date (YYYY-MM-DD)</li>
+        <li><strong>dayN_min_c</strong> - Minimum temperature (Celsius)</li>
+        <li><strong>dayN_max_c</strong> - Maximum temperature (Celsius)</li>
     </ul>
 
     <h2>Source</h2>
-    <p>Data sourced from <a href="http://www.bom.gov.au/">Bureau of Meteorology</a> (IDN11060).</p>
+    <p>Data sourced from the <a href="http://www.bom.gov.au/">Bureau of Meteorology</a> API.</p>
     <p>Updated daily via GitHub Actions.</p>
 
     <p class="updated">Last updated: <span id="updated">Check CSV for latest data</span></p>

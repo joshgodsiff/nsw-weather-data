@@ -27,7 +27,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Fetch BOM data
-        run: uv run python src/fetch_bom.py
+        run: uv run python src/fetch_bom_api.py
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

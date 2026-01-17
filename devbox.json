@@ -10,6 +10,9 @@
         "uv run --extra dev pytest -v"
       ],
       "fetch": [
+        "uv run python src/fetch_bom_api.py"
+      ],
+      "fetch-xml": [
         "uv run python src/fetch_bom.py"
       ]
     }
