@@ -2,8 +2,8 @@ name: Update BOM Forecast
 
 on:
   schedule:
-    # Run daily at 6 AM UTC (5 PM AEDT)
-    - cron: '0 6 * * *'
+    # 6am AEDT = 19:00 UTC (during AEST it will be 5am)
+    - cron: '0 19 * * *'
   workflow_dispatch:  # Allow manual trigger
   push:
     branches: [master]
@@ -28,6 +28,19 @@ jobs:
 
       - name: Fetch BOM data
         run: uv run python src/fetch_bom_api.py
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "BOM Weather Forecast - ${{ github.event.repository.name }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.GMAIL_USERNAME }}
+          body: "Daily weather forecast attached."
+          attachments: site/forecast.csv
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

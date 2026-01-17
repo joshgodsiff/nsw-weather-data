@@ -1,10 +1,9 @@
 """Tests for BOM API forecast fetching."""
 
 import csv
-import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -62,7 +61,13 @@ FORECAST_RESPONSE = {
             "temp_min": None,
             "fire_danger": "Moderate",
             "rain": {
-                "amount": {"min": 10, "max": 30, "units": "mm"},
+                "amount": {
+                    "min": 10,
+                    "max": 30,
+                    "lower_range": 1,
+                    "upper_range": 30,
+                    "units": "mm"
+                },
                 "chance": 90
             },
             "now": {
@@ -79,7 +84,7 @@ FORECAST_RESPONSE = {
             "temp_min": 12,
             "fire_danger": "Moderate",
             "rain": {
-                "amount": {"min": 10, "max": 20, "units": "mm"},
+                "amount": {"min": 10, "max": 20, "lower_range": 3, "upper_range": 20, "units": "mm"},
                 "chance": 80
             }
         },
@@ -89,7 +94,7 @@ FORECAST_RESPONSE = {
             "temp_min": 14,
             "fire_danger": "High",
             "rain": {
-                "amount": {"min": 0, "max": 5, "units": "mm"},
+                "amount": {"min": 0, "max": 5, "lower_range": 0, "upper_range": 5, "units": "mm"},
                 "chance": 40
             }
         }
@@ -106,7 +111,7 @@ LOCATION_DATA = {
 }
 
 
-class TestParseForcast:
+class TestParseForecast:
     """Tests for parse_forecast function."""
 
     def test_parses_today_temps_from_now_data(self):
@@ -121,35 +126,40 @@ class TestParseForcast:
 
         assert forecast.fire_danger == "Moderate"
 
-    def test_parses_rainfall(self):
+    def test_parses_rainfall_as_range_string(self):
         forecast = parse_forecast(LOCATION_DATA, FORECAST_RESPONSE["data"])
 
-        assert forecast.rain_min_mm == 10
-        assert forecast.rain_max_mm == 30
-        assert forecast.rain_chance == 90
+        # Should format as "lower-upper"
+        assert forecast.rain_range_mm == "1-30"
 
-    def test_parses_location_info(self):
+    def test_rainfall_zero_when_both_zero(self):
+        data = [{
+            "date": "2026-01-16T13:00:00Z",
+            "temp_max": 25,
+            "rain": {"amount": {"lower_range": 0, "upper_range": 0}}
+        }]
+        forecast = parse_forecast(LOCATION_DATA, data)
+
+        assert forecast.rain_range_mm == "0"
+
+    def test_parses_location_name(self):
         forecast = parse_forecast(LOCATION_DATA, FORECAST_RESPONSE["data"])
 
         assert forecast.name == "Lithgow"
-        assert forecast.state == "NSW"
-        assert forecast.postcode == "2790"
-        assert forecast.geohash == "r64c839"
 
-    def test_parses_daily_forecasts(self):
+    def test_parses_following_days_forecasts(self):
         forecast = parse_forecast(LOCATION_DATA, FORECAST_RESPONSE["data"])
 
-        assert len(forecast.daily_forecasts) == 3
+        # Should have 2 following days (skipping today)
+        assert len(forecast.daily_forecasts) == 2
 
-        day0 = forecast.daily_forecasts[0]
-        assert day0.date == "2026-01-16"
-        assert day0.temp_max == 18
-        assert day0.temp_min is None  # Today's min not available
-
-        day1 = forecast.daily_forecasts[1]
-        assert day1.date == "2026-01-17"
+        day1 = forecast.daily_forecasts[0]
         assert day1.temp_max == 16
         assert day1.temp_min == 12
+
+        day2 = forecast.daily_forecasts[1]
+        assert day2.temp_max == 22
+        assert day2.temp_min == 14
 
     def test_handles_empty_forecast(self):
         forecast = parse_forecast(LOCATION_DATA, [])
@@ -163,9 +173,7 @@ class TestParseForcast:
         data = [{"date": "2026-01-16T13:00:00Z", "temp_max": 25}]
         forecast = parse_forecast(LOCATION_DATA, data)
 
-        assert forecast.rain_min_mm is None
-        assert forecast.rain_max_mm is None
-        assert forecast.rain_chance is None
+        assert forecast.rain_range_mm == ""
 
     def test_handles_night_now_data(self):
         """When it's night, now_label is 'Min' and temp order is reversed."""
@@ -234,19 +242,14 @@ class TestWriteCsv:
         forecasts = [
             LocationForecast(
                 name="Lithgow",
-                geohash="r64c839",
-                state="NSW",
-                postcode="2790",
                 today_min=12,
                 today_max=18,
-                fire_danger="Moderate",
-                rain_min_mm=10,
-                rain_max_mm=30,
-                rain_chance=90,
                 daily_forecasts=[
-                    DayForecast(date="2026-01-16", temp_min=None, temp_max=18),
-                    DayForecast(date="2026-01-17", temp_min=12, temp_max=16),
+                    DayForecast(temp_min=12, temp_max=16),
+                    DayForecast(temp_min=14, temp_max=22),
                 ],
+                rain_range_mm="1-30",
+                fire_danger="Moderate",
             )
         ]
 
@@ -262,11 +265,24 @@ class TestWriteCsv:
                 rows = list(reader)
 
             assert len(rows) == 2  # header + 1 data row
-            assert rows[0][0] == "location"
-            assert rows[1][0] == "Lithgow"
-            assert rows[1][4] == "12"  # today_min
-            assert rows[1][5] == "18"  # today_max
-            assert rows[1][6] == "Moderate"  # fire_danger
+
+            # Check header structure
+            header = rows[0]
+            assert header[0] == "location"
+            assert header[1] == "today_min"
+            assert header[2] == "today_max"
+            assert "day1_min" in header
+            assert "rain_mm" in header
+            assert "fire_danger" in header
+
+            # Check data
+            data = rows[1]
+            assert data[0] == "Lithgow"
+            assert data[1] == "12"  # today_min
+            assert data[2] == "18"  # today_max
+
+            # Fire danger should be last
+            assert data[-1] == "Moderate"
         finally:
             Path(path).unlink()
 
@@ -274,16 +290,10 @@ class TestWriteCsv:
         forecasts = [
             LocationForecast(
                 name="Test",
-                geohash="abc123",
-                state="NSW",
-                postcode="2000",
                 today_min=None,
                 today_max=25,
                 fire_danger=None,
-                rain_min_mm=None,
-                rain_max_mm=None,
-                rain_chance=None,
-                daily_forecasts=[],
+                rain_range_mm="",
             )
         ]
 
@@ -298,28 +308,24 @@ class TestWriteCsv:
                 rows = list(reader)
 
             # Missing values should be empty strings
-            assert rows[1][4] == ""  # today_min
-            assert rows[1][6] == ""  # fire_danger
+            data = rows[1]
+            assert data[1] == ""  # today_min
+            assert data[-1] == ""  # fire_danger
         finally:
             Path(path).unlink()
 
     def test_pads_missing_forecast_days(self):
-        """Should have 7 days even if fewer are provided."""
+        """Should have 6 following days even if fewer are provided."""
         forecasts = [
             LocationForecast(
                 name="Test",
-                geohash="abc123",
-                state="NSW",
-                postcode="2000",
                 today_min=10,
                 today_max=20,
-                fire_danger=None,
-                rain_min_mm=0,
-                rain_max_mm=5,
-                rain_chance=30,
                 daily_forecasts=[
-                    DayForecast(date="2026-01-16", temp_min=10, temp_max=20),
+                    DayForecast(temp_min=10, temp_max=20),
                 ],
+                rain_range_mm="0-5",
+                fire_danger="Low",
             )
         ]
 
@@ -333,13 +339,46 @@ class TestWriteCsv:
                 reader = csv.reader(f)
                 rows = list(reader)
 
-            # Should have header with all 7 days
+            # Should have header with all 6 following days
             header = rows[0]
-            assert "day6_date" in header
-            assert "day6_max_c" in header
+            assert "day6_min" in header
+            assert "day6_max" in header
 
             # Data row should be padded
             assert len(rows[1]) == len(header)
+        finally:
+            Path(path).unlink()
+
+    def test_field_order(self):
+        """Fields should be: location, today, days 1-6, rain, fire."""
+        forecasts = [
+            LocationForecast(
+                name="Test",
+                today_min=10,
+                today_max=20,
+                daily_forecasts=[DayForecast(temp_min=11, temp_max=21)],
+                rain_range_mm="0-5",
+                fire_danger="Moderate",
+            )
+        ]
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+            path = f.name
+
+        try:
+            write_csv(iter(forecasts), path)
+
+            with open(path) as f:
+                reader = csv.reader(f)
+                header = next(reader)
+
+            # Check order
+            assert header.index("location") == 0
+            assert header.index("today_min") == 1
+            assert header.index("today_max") == 2
+            assert header.index("day1_min") == 3
+            assert header.index("rain_mm") < header.index("fire_danger")
+            assert header.index("fire_danger") == len(header) - 1
         finally:
             Path(path).unlink()
 

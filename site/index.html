@@ -32,34 +32,16 @@
     <p><a href="forecast.csv">forecast.csv</a> - Today's weather + 7-day forecast</p>
 
     <h2>Data Format</h2>
-    <pre>location,state,postcode,geohash,today_min_c,today_max_c,fire_danger,rain_min_mm,rain_max_mm,rain_chance_pct,day0_date,day0_min_c,day0_max_c,...
-Lithgow,NSW,2790,r64c839,12,18,Moderate,10,30,90,2026-01-16,,18,...</pre>
+    <pre>location,today_min,today_max,day1_min,day1_max,...,day6_min,day6_max,rain_mm,fire_danger
+Lithgow,12,18,12,16,11,18,11,19,9,22,9,26,11,26,1-30,Moderate</pre>
 
     <h2>Fields</h2>
-    <h3>Location Info</h3>
     <ul>
         <li><strong>location</strong> - Location name</li>
-        <li><strong>state</strong> - State code</li>
-        <li><strong>postcode</strong> - Postal code</li>
-        <li><strong>geohash</strong> - BOM geohash identifier</li>
-    </ul>
-
-    <h3>Today's Weather</h3>
-    <ul>
-        <li><strong>today_min_c</strong> - Today's minimum temperature (Celsius)</li>
-        <li><strong>today_max_c</strong> - Today's maximum temperature (Celsius)</li>
+        <li><strong>today_min, today_max</strong> - Today's min/max temperature (Celsius)</li>
+        <li><strong>day1_min, day1_max</strong> ... <strong>day6_min, day6_max</strong> - Following 6 days min/max temperatures</li>
+        <li><strong>rain_mm</strong> - Estimated rainfall range for today (e.g., "0-5" or "0" if none)</li>
         <li><strong>fire_danger</strong> - Fire danger rating (e.g., "Moderate", "High", "Extreme")</li>
-        <li><strong>rain_min_mm</strong> - Minimum expected rainfall (mm)</li>
-        <li><strong>rain_max_mm</strong> - Maximum expected rainfall (mm)</li>
-        <li><strong>rain_chance_pct</strong> - Chance of rain (%)</li>
-    </ul>
-
-    <h3>7-Day Forecast</h3>
-    <p>For each day (0-6), where day 0 is today:</p>
-    <ul>
-        <li><strong>dayN_date</strong> - Forecast date (YYYY-MM-DD)</li>
-        <li><strong>dayN_min_c</strong> - Minimum temperature (Celsius)</li>
-        <li><strong>dayN_max_c</strong> - Maximum temperature (Celsius)</li>
     </ul>
 
     <h2>Source</h2>
