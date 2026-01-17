@@ -18,3 +18,32 @@ Dubbo
 Werris Creek
 Tamworth
 Armidale
+Goulburn
+Queanbeyan
+Canberra
+Wagga Wagga
+Junee
+Coolamon
+Narrandera
+Yanco
+Griffith
+Ardlethan
+Temora
+West Wyalong
+Ungarie
+Naradhan
+Dubbo
+Gilgandra
+Gulargambone
+Coonamble
+Narromine
+Trangie
+Nevertire
+Warren
+Nyngan
+Cobar
+Narrabri
+Burren Junction
+Walgett
+Rowena
+Collarenebri

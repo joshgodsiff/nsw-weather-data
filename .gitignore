@@ -4,9 +4,6 @@ __pycache__/
 .venv/
 *.egg-info/
 
-# UV
-uv.lock
-
 # Output (generated at runtime)
 site/forecast.csv
 output/
