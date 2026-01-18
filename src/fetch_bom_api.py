@@ -78,10 +78,20 @@ def search_location(name: str) -> dict | None:
         if not locations:
             return None
 
-        # Try to find an exact match first (case-insensitive)
+        # Try to find an exact match in NSW first (case-insensitive)
         name_lower = name.lower()
         for loc in locations:
+            if loc.get("name", "").lower() == name_lower and loc.get("state") == "NSW":
+                return loc
+
+        # Fall back to any exact match
+        for loc in locations:
             if loc.get("name", "").lower() == name_lower:
+                return loc
+
+        # Fall back to first NSW result
+        for loc in locations:
+            if loc.get("state") == "NSW":
                 return loc
 
         # Fall back to first result

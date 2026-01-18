@@ -391,25 +391,40 @@ class TestSearchLocation:
         assert result is None
 
     @patch("fetch_bom_api.fetch_json")
-    def test_returns_exact_match(self, mock_fetch):
+    def test_prefers_nsw_exact_match(self, mock_fetch):
         mock_fetch.return_value = SEARCH_RESPONSE_MULTIPLE
         result = search_location("Newbridge")
 
         assert result is not None
-        # Should match first one since both have same name
+        # Should prefer NSW match over VIC
         assert result["name"] == "Newbridge"
+        assert result["state"] == "NSW"
 
     @patch("fetch_bom_api.fetch_json")
-    def test_returns_first_result_if_no_exact_match(self, mock_fetch):
+    def test_prefers_nsw_when_no_exact_match(self, mock_fetch):
         mock_fetch.return_value = {
             "data": [
-                {"name": "Sydney CBD", "geohash": "abc"},
-                {"name": "Sydney Airport", "geohash": "def"},
+                {"name": "Springfield", "geohash": "abc", "state": "VIC"},
+                {"name": "Springfield North", "geohash": "def", "state": "NSW"},
             ]
         }
-        result = search_location("Sydney")
+        result = search_location("Spring")
 
-        assert result["name"] == "Sydney CBD"
+        # Should prefer NSW result
+        assert result["state"] == "NSW"
+
+    @patch("fetch_bom_api.fetch_json")
+    def test_falls_back_to_first_result_if_no_nsw(self, mock_fetch):
+        mock_fetch.return_value = {
+            "data": [
+                {"name": "Springfield", "geohash": "abc", "state": "VIC"},
+                {"name": "Springfield", "geohash": "def", "state": "QLD"},
+            ]
+        }
+        result = search_location("Springfield")
+
+        # No NSW results, so should return first
+        assert result["geohash"] == "abc"
 
     @patch("fetch_bom_api.fetch_json")
     def test_returns_none_if_no_results(self, mock_fetch):
