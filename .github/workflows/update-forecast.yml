@@ -29,6 +29,13 @@ jobs:
       - name: Fetch BOM data
         run: uv run python src/fetch_bom_api.py
 
+      - name: Get Australian date
+        id: date
+        run: echo "date=$(TZ='Australia/Sydney' date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Prepare CSV with date
+        run: cp site/forecast.csv "site/forecast-${{ steps.date.outputs.date }}.csv"
+
       - name: Send email
         uses: dawidd6/action-send-mail@v3
         with:
@@ -36,11 +43,11 @@ jobs:
           server_port: 587
           username: ${{ secrets.GMAIL_USERNAME }}
           password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          subject: "BOM Weather Forecast - ${{ github.event.repository.name }}"
+          subject: "BOM Weather Forecast - ${{ steps.date.outputs.date }}"
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.GMAIL_USERNAME }}
-          body: "Daily weather forecast attached."
-          attachments: site/forecast.csv
+          body: "Daily weather forecast for ${{ steps.date.outputs.date }} attached."
+          attachments: site/forecast-${{ steps.date.outputs.date }}.csv
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
