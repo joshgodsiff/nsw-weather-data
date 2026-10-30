@@ -2,8 +2,8 @@ name: Update BOM Forecast
 
 on:
   schedule:
-    # 6am AEDT = 19:00 UTC (during AEST it will be 5am)
-    - cron: '0 19 * * *'
+    - cron: '0 6 * * *'
+      timezone: 'Australia/Sydney'
   workflow_dispatch:  # Allow manual trigger
   push:
     branches: [master]
